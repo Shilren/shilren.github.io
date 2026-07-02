@@ -27,15 +27,10 @@
     <main id="top">
         <section class="hero-gallery" aria-label="Resource gallery">
             <div class="hero-intro">
-                <p class="kicker">For early products, independent creators, and useful tools</p>
-                <h1>把早期想法跑成可增长的产品和内容系统。</h1>
-                <p>
-                    我更关心一件事能不能形成积累：工作经历变成积累样本，内容和表达变成社区资源，
-                    日常思考变成知识库，审美潜意识变成可商用的表达。
-                </p>
+                <h1>我在把产品经验、AI 自动化、自媒体资源和审美判断，沉淀成可合作的商业资源。</h1>
             </div>
 
-            <button class="resource-card card-work" id="work" data-resource="work">
+            <button class="resource-card card-work card-north" id="work" data-resource="work">
                 <span class="label">01 / Internet Work</span>
                 <span class="visual" aria-hidden="true"></span>
                 <strong>互联网产品经历</strong>
@@ -43,7 +38,7 @@
                 <small>增长、社区、搜索与内容分发</small>
             </button>
 
-            <button class="resource-card card-creator" id="creator" data-resource="creator">
+            <button class="resource-card card-creator card-east" id="creator" data-resource="creator">
                 <span class="label">02 / Creator Community</span>
                 <span class="visual" aria-hidden="true"></span>
                 <strong>自媒体社群资源</strong>
@@ -51,7 +46,7 @@
                 <small>用内容和价值观沉淀渠道与社群</small>
             </button>
 
-            <button class="resource-card card-knowledge" id="knowledge" data-resource="knowledge">
+            <button class="resource-card card-knowledge card-south" id="knowledge" data-resource="knowledge">
                 <span class="label">03 / Knowledge Base</span>
                 <span class="visual" aria-hidden="true"></span>
                 <strong>个人知识库积累</strong>
@@ -59,7 +54,7 @@
                 <small>把经历、想法和复盘变成复利系统</small>
             </button>
 
-            <button class="resource-card card-taste" id="taste" data-resource="taste">
+            <button class="resource-card card-taste card-west" id="taste" data-resource="taste">
                 <span class="label">04 / Taste</span>
                 <span class="visual" aria-hidden="true"></span>
                 <strong>审美与表达</strong>
@@ -147,13 +142,35 @@
             }
         };
 
+        const hero = document.querySelector(".hero-gallery");
+        const brand = document.querySelector(".brand");
         const drawer = document.getElementById("detailDrawer");
         const scrim = document.getElementById("drawerScrim");
         const closeButton = document.querySelector(".drawer-close");
+        let hasRevealed = false;
+
+        function revealMap() {
+            if (hasRevealed) return false;
+            hasRevealed = true;
+            document.body.classList.add("is-map");
+            hero.classList.add("is-expanded");
+            return true;
+        }
+
+        function resetMap() {
+            closeDrawer();
+            hasRevealed = false;
+            document.body.classList.remove("is-map");
+            hero.classList.remove("is-expanded");
+            if (window.location.hash && window.location.hash !== "#top") {
+                history.replaceState(null, "", window.location.pathname + window.location.search);
+            }
+        }
 
         function openDrawer(key) {
             const item = resources[key];
             if (!item) return;
+            revealMap();
             document.getElementById("drawerKicker").textContent = item.kicker;
             document.getElementById("drawerTitle").textContent = item.title;
             document.getElementById("drawerBody").textContent = item.body;
@@ -172,14 +189,41 @@
             drawer.setAttribute("aria-hidden", "true");
         }
 
+        hero.addEventListener("click", event => {
+            if (!hasRevealed && !event.target.closest(".resource-card")) revealMap();
+        });
+        brand.addEventListener("click", event => {
+            event.preventDefault();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            resetMap();
+        });
+        window.addEventListener("wheel", event => {
+            if (event.deltaY > 12 && window.scrollY < 80 && revealMap()) {
+                event.preventDefault();
+            }
+            if (event.deltaY < -12 && window.scrollY < 20 && hasRevealed) {
+                resetMap();
+                event.preventDefault();
+            }
+        }, { passive: false });
+        window.addEventListener("touchmove", revealMap, { passive: true, once: true });
+        document.addEventListener("keydown", event => {
+            if (["ArrowDown", "PageDown", " "].includes(event.key)) revealMap();
+        });
         document.querySelectorAll(".resource-card").forEach(card => {
             card.addEventListener("click", () => openDrawer(card.dataset.resource));
         });
         closeButton.addEventListener("click", closeDrawer);
         scrim.addEventListener("click", closeDrawer);
         document.addEventListener("keydown", event => {
-            if (event.key === "Escape") closeDrawer();
+            if (event.key === "Escape") {
+                if (drawer.classList.contains("is-open")) closeDrawer();
+                else if (hasRevealed) resetMap();
+            }
         });
+        if (window.scrollY > 80 || (window.location.hash && window.location.hash !== "#top")) {
+            revealMap();
+        }
     </script>
 </body>
 
